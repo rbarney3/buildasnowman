@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Farm Scene</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            touch-action: none;
+            background-color: green;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="farmCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById("farmCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const images = {
+            tractor: new Image(),
+            horse: new Image(),
+            sheep: new Image(),
+            farmer: new Image(),
+            barn: new Image()
+        };
+
+        images.tractor.src = "tractor.png";
+        images.horse.src = "horse.png";
+        images.sheep.src = "sheep.png";
+        images.farmer.src = "farmer.png";
+        images.barn.src = "barn.png";
+
+        const objects = [
+            { name: "tractor", x: 50, y: 50, width: 100, height: 60, img: images.tractor },
+            { name: "horse", x: 200, y: 100, width: 80, height: 60, img: images.horse },
+            { name: "sheep", x: 350, y: 150, width: 70, height: 50, img: images.sheep },
+            { name: "farmer", x: 500, y: 200, width: 60, height: 100, img: images.farmer },
+            { name: "barn", x: 600, y: 250, width: 120, height: 100, img: images.barn }
+        ];
+        let selectedObject = null;
+        let offsetX, offsetY;
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            objects.forEach(obj => {
+                ctx.drawImage(obj.img, obj.x, obj.y, obj.width, obj.height);
+            });
+        }
+        
+        function getObjectAtPosition(x, y) {
+            return objects.reverse().find(obj => x > obj.x && x < obj.x + obj.width && y > obj.y && y < obj.y + obj.height);
+        }
+        
+        function startDrag(x, y) {
+            selectedObject = getObjectAtPosition(x, y);
+            if (selectedObject) {
+                offsetX = x - selectedObject.x;
+                offsetY = y - selectedObject.y;
+            }
+        }
+
+        function dragObject(x, y) {
+            if (selectedObject) {
+                selectedObject.x = x - offsetX;
+                selectedObject.y = y - offsetY;
+                drawScene();
+            }
+        }
+
+        function stopDrag() {
+            selectedObject = null;
+        }
+
+        canvas.addEventListener("mousedown", e => startDrag(e.offsetX, e.offsetY));
+        canvas.addEventListener("mousemove", e => dragObject(e.offsetX, e.offsetY));
+        canvas.addEventListener("mouseup", stopDrag);
+        canvas.addEventListener("mouseleave", stopDrag);
+
+        canvas.addEventListener("touchstart", e => {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            startDrag(touch.clientX - rect.left, touch.clientY - rect.top);
+            e.preventDefault();
+        });
+
+        canvas.addEventListener("touchmove", e => {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            dragObject(touch.clientX - rect.left, touch.clientY - rect.top);
+            e.preventDefault();
+        });
+
+        canvas.addEventListener("touchend", stopDrag);
+        canvas.addEventListener("touchcancel", stopDrag);
+
+        const checkImagesLoaded = setInterval(() => {
+            if (Object.values(images).every(img => img.complete)) {
+                clearInterval(checkImagesLoaded);
+                drawScene();
+            }
+        }, 100);
+    </script>
+</body>
+</html>
